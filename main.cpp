@@ -76,9 +76,26 @@ string katakanaToHiragana(string text) {
 	string ret = "";
 	for(int i = 0; i < utf8len(text); i++) {
 		string chr = utf8substr(text, i, 1);
-		if(isKatakana(chr, false))
-			appendUnicode(ret, hiraganaStart + charPoint(chr) - katakanaStart);
-		else
+		if(isKatakana(chr, true)) {
+			if(chr == "ー") { // e.g.: ホントー -> ほんとう
+				string prevChr = utf8substr(text, i - 1, 1);
+				if(prevChr == "ア" || prevChr == "イ" || prevChr == "エ")
+					appendUnicode(ret, hiraganaStart + charPoint(prevChr) - katakanaStart);
+				else if(prevChr == "オ" || prevChr == "ウ")
+					ret += "う";
+				else if(prevChr == "カ" || prevChr == "ガ" || prevChr == "サ" || prevChr == "ザ" || prevChr == "タ" || prevChr == "ダ" || prevChr == "ナ" || prevChr == "ハ" || prevChr == "バ" || prevChr == "パ" || prevChr == "マ" || prevChr == "ヤ" || prevChr == "ラ" || prevChr == "ワ")
+					ret += "あ";
+				else if(prevChr == "キ" || prevChr == "ギ" || prevChr == "シ" || prevChr == "ジ" || prevChr == "チ" || prevChr == "ヂ" || prevChr == "ニ" || prevChr == "ヒ" || prevChr == "ビ" || prevChr == "ピ" || prevChr == "ミ" || prevChr == "リ" || prevChr == "ヰ")
+					ret += "い";
+				else if(prevChr == "ク" || prevChr == "グ" || prevChr == "ス" || prevChr == "ズ" || prevChr == "ツ" || prevChr == "ズ" || prevChr == "ヌ" || prevChr == "フ" || prevChr == "ブ" || prevChr == "プ" || prevChr == "ム" || prevChr == "ル" || prevChr == "コ" || prevChr == "ゴ" || prevChr == "ソ" || prevChr == "ゾ" || prevChr == "ト" || prevChr == "ド" || prevChr == "ノ" || prevChr == "ホ" || prevChr == "ボ" || prevChr == "ポ" || prevChr == "モ" || prevChr == "ロ" || prevChr == "ヲ")
+					ret += "う";
+				else if(prevChr == "ケ" || prevChr == "ゲ" || prevChr == "セ" || prevChr == "ゼ" || prevChr == "テ" || prevChr == "デ" || prevChr == "ネ" || prevChr == "ヘ" || prevChr == "ベ" || prevChr == "ペ" || prevChr == "メ" || prevChr == "レ" || prevChr == "ヱ")
+					ret += "え";
+				else
+					ret += "ー";
+			}else
+				appendUnicode(ret, hiraganaStart + charPoint(chr) - katakanaStart);
+		} else
 			ret += chr;
 	}
 	return ret;

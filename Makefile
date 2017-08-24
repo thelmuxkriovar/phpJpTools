@@ -3,8 +3,8 @@ INI_DIR = /etc/php.d/
 EXTENSION_DIR = $(shell php-config --extension-dir)
 EXTENSION = ${NAME}.so
 INI = ${NAME}.ini
-COMPILER = clang
-LINKER = clang
+COMPILER = clang++
+LINKER = clang++
 COMPILER_FLAGS = -Wall -c -O3 -std=c++11 -fpic -o
 LINKER_FLAGS = -shared
 LINKER_DEPENDENCIES = -lphpcpp -lmecab
