@@ -10,7 +10,7 @@ int utf8len(std::string str) {
 	return len;
 }
 
-std::string utf8substr(std::string str, int start, int desiredLength) {
+std::string utf8substr(std::string str, int start, int desiredLength = 2147483647) {
 	int len = 0, byteIndex = 0;
 	size_t size = str.size();
 	size_t startByte = -1;

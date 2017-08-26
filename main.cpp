@@ -15,10 +15,12 @@
 
 using namespace std;
 
+string mecabArgs = "";
+
 class jpUtils {
 	public:
 		static bool isHiragana(string chraracter) {
-			int chr = charPoint(chraracter);
+			int chr =  charPoint(chraracter);
 			if(chr < hiraganaStart)
 				return false;
 			if(chr > hiraganaEnd) // hiragana upper limit. Following, are dakuten, handakuten and other characters, we shall NOT consider those as proper hiragana
@@ -102,18 +104,18 @@ class jpUtils {
 				}else{
 					ruby = utf8substr(kanji, 0, lastKanji - placeRight);
 					rt = utf8substr(reading, 0, lastReading - placeRight);
-					after = utf8substr(reading, lastReading - placeRight, 2147483647);
+					after = utf8substr(reading, lastReading - placeRight);
 				}
 			}else{
 				if(placeRight == 0) {
 					before = utf8substr(reading, 0, placeLeft);
-					ruby = utf8substr(kanji, placeLeft, 2147483647);
-					rt = utf8substr(reading, placeLeft, 2147483647);
+					ruby = utf8substr(kanji, placeLeft);
+					rt = utf8substr(reading, placeLeft);
 				} else {
 					before = utf8substr(reading, 0, placeLeft);
 					ruby = utf8substr(kanji, placeLeft, lastKanji - placeRight);
 					rt = utf8substr(reading, placeLeft, lastReading - placeRight);
-					after = utf8substr(reading, lastReading - placeRight, 2147483647);
+					after = utf8substr(reading, lastReading - placeRight);
 				}
 			}
 			return before + "<ruby><rb>"+ruby+"</rb><rt>"+rt+"</rt></ruby>"+after;
@@ -122,7 +124,17 @@ class jpUtils {
 			string out = "";
 			const char *input = text.c_str();
 			char *token;
-			MeCab::Tagger *tagger = MeCab::createTagger("");
+			
+			MeCab::Tagger *tagger = MeCab::createTagger(mecabArgs.c_str());
+			if(!tagger) {
+				string msg = "Can't process furigana data. ";
+				if(mecabArgs == "")
+					msg += "Do you have a mecab dictionary installed?";
+				else
+					msg += "Did you specify the correct path to your mecab dictionary folder?";
+				Php::error << msg << flush;
+				return "";
+			}
 
 			const MeCab::Node* node = tagger->parseToNode(input);
 			for (; node; node = node->next) {
@@ -147,7 +159,7 @@ class jpUtils {
 				}else
 					out += word;
 			}
-			return out;
+			return out;		
 		}
 		static string hiraganaToKatakana(string text) {
 			string ret = "";
@@ -159,6 +171,10 @@ class jpUtils {
 					ret += chr;
 			}
 			return ret;
+		}
+
+		static void setDictionaryPath(string dicPath) {
+			mecabArgs = "-d "+dicPath;
 		}
 };
 
@@ -188,6 +204,11 @@ Php::Value phpHiraganaToKatakana(Php::Parameters &parameters) {
 	return jpUtils::hiraganaToKatakana(parameters[0]);
 }
 
+Php::Value phpSetDictionaryPath(Php::Parameters &parameters) {
+	jpUtils::setDictionaryPath(parameters[0]);
+	return NULL;
+}
+
 extern "C" {
 	PHPCPP_EXPORT void *get_module() {
 		static Php::Extension extension("jpTools", "1.0");
@@ -206,6 +227,9 @@ extern "C" {
 		});
 		extension.add<phpGetFurigana>("getFurigana", {
 			Php::ByVal("string", Php::Type::String, true)
+		});
+		extension.add<phpSetDictionaryPath>("jpDictionarySetPath", {
+			Php::ByVal("dictionary", Php::Type::String, true)
 		});
 		return extension;
 	}
