@@ -1,3 +1,4 @@
-PHP-CPP
-*.o
+out/
 .vscode
+*.o
+*.so

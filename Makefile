@@ -1,30 +1,23 @@
 NAME = jpTools
-INI_DIR = /etc/php.d/
 EXTENSION_DIR = $(shell php-config --extension-dir)
+CP = cp -f
+INI_DIR = /etc/php/conf.d/
 EXTENSION = ${NAME}.so
 INI = ${NAME}.ini
-COMPILER = clang++
-LINKER = clang++
-COMPILER_FLAGS = -Wall -c -O3 -std=c++11 -fpic -o
-LINKER_FLAGS = -shared
-LINKER_DEPENDENCIES = -lphpcpp -lmecab
-RM = rm -f
-CP = cp -f
-MKDIR = mkdir -p
-SOURCES = $(wildcard *.cpp)
-OBJECTS = $(SOURCES:%.cpp=%.o)
 
-all: ${OBJECTS} ${EXTENSION}
-
-${EXTENSION}:	${OBJECTS}
-	${LINKER} ${LINKER_FLAGS} -o $@ ${OBJECTS} ${LINKER_DEPENDENCIES}
-
-${OBJECTS}:
-	${COMPILER} ${COMPILER_FLAGS} $@ ${@:%.o=%.cpp}
+extension: jpTools.i jpTools.cpp utf8Utils.cpp utf8Utils.hpp
+	swig -c++ -php7 -outdir out -o out/jpTools_wrap.cxx jpTools.i
+	g++ -std=c++1z `php-config --includes` -lmecab -fpic -c out/jpTools_wrap.cxx utf8Utils.cpp jpTools.cpp
+	g++ -lmecab -shared jpTools_wrap.o jpTools.o utf8Utils.o -o jpTools.so
 
 install:		
 	${CP} ${EXTENSION} ${EXTENSION_DIR}
 	${CP} ${INI} ${INI_DIR}
-				
+
 clean:
-	${RM} ${EXTENSION} ${OBJECTS}
+	$(RM) -r out
+	$(RM) *.o
+	$(RM) *.so
+	mkdir out
+
+.PHONY: clean install
